@@ -1,1 +1,3 @@
-# PhoneGapDemo
+# The Demo
+
+PhoneGap demo application
