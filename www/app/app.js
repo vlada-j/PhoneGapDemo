@@ -41,21 +41,21 @@ angular.module('App', ['ionic'])
 			}
 		})
 
-		.state('tab.chats', {
-			url: '/chats',
+		.state('tab.archive', {
+			url: '/archive',
 			views: {
-				'tab-chats': {
-					templateUrl: 'app/tab-chats.html',
-					controller: 'ChatsCtrl'
+				'tab-archive': {
+					templateUrl: 'app/tab-archive.html',
+					controller: 'ArchiveCtrl'
 				}
 			}
 		})
-		.state('tab.chat-detail', {
-			url: '/chats/:chatId',
+		.state('tab.archive-detail', {
+			url: '/archive/:itemId',
 			views: {
-				'tab-chats': {
-					templateUrl: 'app/chat-detail.html',
-					controller: 'ChatDetailCtrl'
+				'tab-archive': {
+					templateUrl: 'app/item-detail.html',
+					controller: 'ItemDetailCtrl'
 				}
 			}
 		})
@@ -74,17 +74,38 @@ angular.module('App', ['ionic'])
 
 })
 
-.controller('BarcodeCtrl', function($scope) {})
+.controller('BarcodeCtrl', function($scope, Archive) {
+	$scope.text = '';
+	$scope.format = '';
+	$scope.cancelled = '';
+	$scope.msg = '';
 
-.controller('ChatsCtrl', function($scope, Chats) {
-	$scope.chats = Chats.all();
-	$scope.remove = function(chat) {
-		Chats.remove(chat);
+	$scope.scan = function() {
+		cordova.plugins.barcodeScanner.scan(
+			function (result) {
+				$scope.text = result.text;
+				$scope.format = result.format;
+				$scope.cancelled = result.cancelled;
+
+				Archive.add(result);
+			},
+			function (error) {
+				$scope.msg = 'Scanning failed: ' + error;
+			}
+		);
+	};
+
+})
+
+.controller('ArchiveCtrl', function($scope, Archive) {
+	$scope.archive = Archive.all();
+	$scope.remove = function(item) {
+		Archive.remove(item);
 	};
 })
 
-.controller('ChatDetailCtrl', function($scope, $stateParams, Chats) {
-	$scope.chat = Chats.get($stateParams.chatId);
+.controller('ItemDetailCtrl', function($scope, $stateParams, Archive) {
+	$scope.item = Archive.get($stateParams.itemId);
 })
 
 .controller('AccountCtrl', function($scope) {
@@ -93,45 +114,23 @@ angular.module('App', ['ionic'])
 	};
 })
 
-.factory('Chats', function() {
-	var chats = [{
-		id: 0,
-		name: 'Ben Sparrow',
-		lastText: 'You on your way?',
-		face: 'https://pbs.twimg.com/profile_images/514549811765211136/9SgAuHeY.png'
-	}, {
-		id: 1,
-		name: 'Max Lynx',
-		lastText: 'Hey, it\'s me',
-		face: 'https://avatars3.githubusercontent.com/u/11214?v=3&s=460'
-	}, {
-		id: 2,
-		name: 'Adam Bradleyson',
-		lastText: 'I should buy a boat',
-		face: 'https://pbs.twimg.com/profile_images/479090794058379264/84TKj_qa.jpeg'
-	}, {
-		id: 3,
-		name: 'Perry Governor',
-		lastText: 'Look at my mukluks!',
-		face: 'https://pbs.twimg.com/profile_images/598205061232103424/3j5HUXMY.png'
-	}, {
-		id: 4,
-		name: 'Mike Harrington',
-		lastText: 'This is wicked good ice cream.',
-		face: 'https://pbs.twimg.com/profile_images/578237281384841216/R3ae1n61.png'
-	}];
+.factory('Archive', function() {
+	var archive = [];
 
 	return {
 		all: function() {
-			return chats;
+			return archive;
 		},
-		remove: function(chat) {
-			chats.splice(chats.indexOf(chat), 1);
+		add: function(item) {
+			archive.push(item);
 		},
-		get: function(chatId) {
-			for (var i = 0; i < chats.length; i++) {
-				if (chats[i].id === parseInt(chatId)) {
-					return chats[i];
+		remove: function(item) {
+			archive.splice(archive.indexOf(item), 1);
+		},
+		get: function(itemId) {
+			for (var i = 0; i < archive.length; i++) {
+				if (archive[i].id === parseInt(itemId)) {
+					return archive[i];
 				}
 			}
 			return null;
